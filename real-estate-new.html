@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LandNexus • Premium Real Estate &amp; Land Marketplace</title>
+    <!-- Bootstrap 5.3.3 + Icons + Custom -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Playfair+Display:wght@700&amp;display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1e40af;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .navbar {
+            background: linear-gradient(90deg, #1e40af, #3b82f6);
+        }
+        .hero {
+            background: linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url('https://picsum.photos/id/1015/2000/1200') center/cover no-repeat;
+            color: white;
+        }
+        .property-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .property-card:hover {
+            transform: translateY(-12px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15) !important;
+        }
+        .search-bar {
+            max-width: 620px;
+            margin: 0 auto;
+        }
+        .nav-link {
+            color: white !important;
+        }
+        .nav-link:hover {
+            color: #bae6fd !important;
+        }
+        .section-header {
+            font-family: 'Playfair Display', serif;
+        }
+        .footer {
+            background: #0f172a;
+        }
+        .map-placeholder {
+            height: 380px;
+            background: linear-gradient(45deg, #e0f2fe, #bae6fd);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: #1e40af;
+            position: relative;
+        }
+        .modal-content {
+            border: none;
+            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+        }
+    </style>
+</head>
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold fs-3 d-flex align-items-center" href="#">
+                <i class="bi bi-map fs-1 me-2"></i>
+                LandNexus
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navmenu">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link px-3 active" href="#">Home</a></li>
+                    <li class="nav-item"><a class="nav-link px-3" href="#explore">Explore</a></li>
+                    <li class="nav-item"><a class="nav-link px-3" href="#">Sell My Land</a></li>
+                    <li class="nav-item"><a class="nav-link px-3" href="#">About</a></li>
+                </ul>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="position-relative">
+                        <input type="text" id="searchInput" class="form-control search-bar" placeholder="Search by location, size or price..." onkeyup="filterProperties()">
+                        <i class="bi bi-search position-absolute end-0 top-50 translate-middle-y me-3 text-muted"></i>
+                    </div>
+                    <button class="btn btn-outline-light btn-sm" onclick="showLoginModal()">
+                        <i class="bi bi-person"></i> Sign in
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <header class="hero text-center py-5">
+        <div class="container">
+            <h1 class="display-3 fw-bold mb-3">Find Your Perfect Plot of Land</h1>
+            <p class="lead mb-4">Premium real estate &amp; land listings • Verified • Transparent • Nationwide</p>
+            <div class="search-bar mx-auto">
+                <div class="input-group input-group-lg">
+                    <input type="text" class="form-control border-0" placeholder="City, State, or ZIP code" id="heroSearch">
+                    <button class="btn btn-light fw-semibold px-5" onclick="window.location.href='#explore'">Search Land</button>
+                </div>
+            </div>
+            <div class="mt-4">
+                <span class="badge bg-light text-dark me-2">100% Verified Listings</span>
+                <span class="badge bg-light text-dark">₹0 Commission</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- FILTERS -->
+    <div class="bg-white py-4 border-bottom">
+        <div class="container">
+            <div class="row align-items-center g-3">
+                <div class="col-md-3">
+                    <select id="typeSelect" class="form-select" onchange="filterProperties()">
+                        <option value="">Any Type</option>
+                        <option value="Residential">Residential</option>
+                        <option value="Agricultural">Agricultural</option>
+                        <option value="Commercial">Commercial</option>
+                        <option value="Industrial">Industrial</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <input type="range" class="form-range" min="0" max="50000000" step="100000" id="priceRange" oninput="updatePriceRange(this)">
+                    <div class="d-flex justify-content-between text-muted small">
+                        <span>₹0</span>
+                        <span id="priceValue">₹5 Crore</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select id="sizeSelect" class="form-select" onchange="filterProperties()">
+                        <option value="">Any Size</option>
+                        <option value="Small">Small (&lt;1000 sqm)</option>
+                        <option value="Medium">Medium (1000-5000 sqm)</option>
+                        <option value="Large">Large (&gt;5000 sqm)</option>
+                    </select>
+                </div>
+                <div class="col-md-3 text-end">
+                    <button class="btn btn-primary px-4" onclick="filterProperties()">Apply Filters</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROPERTY GRID -->
+    <section id="explore" class="py-5 bg-light">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="section-header h3 fw-bold mb-0">Featured Listings</h2>
+                <span class="text-muted" id="resultCount">12 properties found</span>
+            </div>
+            
+            <div class="row g-4" id="propertiesGrid">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- MAP PLACEHOLDER -->
+    <section class="py-5">
+        <div class="container">
+            <h3 class="section-header text-center mb-4">Interactive Map View</h3>
+            <div class="map-placeholder">
+                <div>
+                    <i class="bi bi-globe2 fs-1 mb-3 d-block"></i>
+                    <p class="mb-0">India Interactive Map (India-focused demo)<br>
+                    <small>Click any pin to see details • 2,340 active listings</small></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CATEGORIES -->
+    <section class="py-5 bg-white">
+        <div class="container">
+            <h3 class="section-header text-center mb-5">Browse by Category</h3>
+            <div class="row g-4 text-center">
+                <div class="col-md-3">
+                    <div class="card h-100 border-0 shadow-sm" onclick="filterByCategory('Agricultural')">
+                        <div class="card-body">
+                            <i class="bi bi-flower3 fs-1 text-success mb-3"></i>
+                            <h5>Agricultural Land</h5>
+                            <p class="text-muted small">Farmlands &amp; orchards</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card h-100 border-0 shadow-sm" onclick="filterByCategory('Residential')">
+                        <div class="card-body">
+                            <i class="bi bi-house fs-1 text-primary mb-3"></i>
+                            <h5>Residential Plots</h5>
+                            <p class="text-muted small">Ready-to-build homes</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card h-100 border-0 shadow-sm" onclick="filterByCategory('Commercial')">
+                        <div class="card-body">
+                            <i class="bi bi-briefcase fs-1 text-warning mb-3"></i>
+                            <h5>Commercial Plots</h5>
+                            <p class="text-muted small">Business &amp; investment</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card h-100 border-0 shadow-sm" onclick="filterByCategory('Industrial')">
+                        <div class="card-body">
+                            <i class="bi bi-gear fs-1 text-danger mb-3"></i>
+                            <h5>Industrial Land</h5>
+                            <p class="text-muted small">Manufacturing zones</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col-lg-4 mb-4 mb-lg-0">
+                    <div class="mx-auto rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width:90px;height:90px">
+                        <i class="bi bi-search fs-1"></i>
+                    </div>
+                    <h5 class="mt-4">Browse Listings</h5>
+                    <p class="text-muted">Explore thousands of verified land plots</p>
+                </div>
+                <div class="col-lg-4 mb-4 mb-lg-0">
+                    <div class="mx-auto rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width:90px;height:90px">
+                        <i class="bi bi-heart fs-1"></i>
+                    </div>
+                    <h5 class="mt-4">Save &amp; Shortlist</h5>
+                    <p class="text-muted">Keep your favorites in one place</p>
+                </div>
+                <div class="col-lg-4">
+                    <div class="mx-auto rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width:90px;height:90px">
+                        <i class="bi bi-check2-circle fs-1"></i>
+                    </div>
+                    <h5 class="mt-4">Secure Purchase</h5>
+                    <p class="text-muted">100% transparent transaction with escrow</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer text-white py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <h5 class="fw-bold">LandNexus</h5>
+                    <p class="text-muted small">India's most trusted real estate &amp; land marketplace since 2022.</p>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="text-white"><i class="bi bi-facebook fs-4"></i></a>
+                        <a href="#" class="text-white"><i class="bi bi-instagram fs-4"></i></a>
+                        <a href="#" class="text-white"><i class="bi bi-linkedin fs-4"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-6 mb-4">
+                    <h6 class="fw-semibold">Platform</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-muted text-decoration-none">Home</a></li>
+                        <li><a href="#" class="text-muted text-decoration-none">Explore</a></li>
+                        <li><a href="#" class="text-muted text-decoration-none">Sell Land</a></li>
+                        <li><a href="#" class="text-muted text-decoration-none">Blog</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-6 mb-4">
+                    <h6 class="fw-semibold">Resources</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-muted text-decoration-none">About Us</a></li>
+                        <li><a href="#" class="text-muted text-decoration-none">Careers</a></li>
+                        <li><a href="#" class="text-muted text-decoration-none">Help Center</a></li>
+                        <li><a href="#" class="text-muted text-decoration-none">Terms</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4">
+                    <h6 class="fw-semibold mb-3">Subscribe to our newsletter</h6>
+                    <div class="input-group">
+                        <input type="email" class="form-control" placeholder="your@email.com">
+                        <button class="btn btn-light">Subscribe</button>
+                    </div>
+                    <small class="d-block mt-3 text-muted">© 2026 LandNexus. All rights reserved.</small>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- LOGIN MODAL -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold">Welcome back</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" placeholder="you@example.com" value="demo@example.com">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-control" placeholder="••••••••" value="demo123">
+                    </div>
+                    <button onclick="loginDemo()" class="btn btn-primary w-100 py-2">Sign in</button>
+                    <div class="text-center mt-3">
+                        <small>Demo login: <code>demo@example.com</code> / <code>demo123</code></small>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-link text-muted" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROPERTY DETAIL MODAL -->
+    <div class="modal fade" id="propertyModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold" id="modalTitle"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="modalContent" class="row g-4">
+                        <!-- JS injected -->
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button onclick="saveProperty()" class="btn btn-outline-primary">Save for later</button>
+                    <button onclick="contactOwner()" class="btn btn-primary">Contact Owner</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHAT DEMO MODAL -->
+    <div class="modal fade" id="chatModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Chat with Owner</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" style="height: 420px; overflow-y: auto;">
+                    <div id="chatMessages" class="d-flex flex-column gap-3">
+                        <!-- JS injected -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <input type="text" id="chatInput" class="form-control" placeholder="Type message...">
+                    <button onclick="sendChatMessage()" class="btn btn-primary">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom JS -->
+    <script>
+        // Sample properties data
+        let properties = [
+            {
+                id: 1,
+                title: "Luxury 2-Acre Plot in Gurugram",
+                type: "Residential",
+                price: 18500000,
+                size: "2 acre",
+                location: "Gurugram, Haryana",
+                description: "Prime location near DLF Cyber Hub. Fully approved and ready for construction.",
+                image: "https://picsum.photos/id/1015/600/400",
+                lat: 28.4595,
+                lng: 77.0266
+            },
+            {
+                id: 2,
+                title: "1000 sqm Commercial Plot near Bangalore Airport",
+                type: "Commercial",
+                price: 9200000,
+                size: "1000 sqm",
+                location: "Whitefield, Bangalore",
+                description: "High footfall zone. Perfect for retail or office.",
+                image: "https://picsum.photos/id/201/600/400",
+                lat: 12.9752,
+                lng: 77.7026
+            },
+            {
+                id: 3,
+                title: "5 Acre Farm Land with Borewell",
+                type: "Agricultural",
+                price: 12500000,
+                size: "5 acre",
+                location: "Mysore, Karnataka",
+                description: "Irreversible farm land with natural water source.",
+                image: "https://picsum.photos/id/133/600/400",
+                lat: 12.2958,
+                lng: 76.6399
+            },
+            {
+                id: 4,
+                title: "Residential Plot in Hyderabad Gachibowli",
+                type: "Residential",
+                price: 6500000,
+                size: "1200 sqm",
+                location: "Gachibowli, Hyderabad",
+                description: "Modern infrastructure. 10 mins from Hi-Tech City.",
+                image: "https://picsum.photos/id/29/600/400",
+                lat: 17.4417,
+                lng: 78.3486
+            },
+            {
+                id: 5,
+                title: "Industrial Land 3.5 Acre near Pune MIDC",
+                type: "Industrial",
+                price: 18500000,
+                size: "3.5 acre",
+                location: "Pune, Maharashtra",
+                description: "Ready for factory or warehouse. Excellent connectivity.",
+                image: "https://picsum.photos/id/160/600/400",
+                lat: 18.5204,
+                lng: 73.8567
+            }
+        ];
+
+        // Render properties
+        function renderProperties(filteredProps) {
+            const grid = document.getElementById('propertiesGrid');
+            grid.innerHTML = '';
+            filteredProps.forEach(prop => {
+                const card = document.createElement('div');
+                card.className = 'col-lg-4 col-md-6';
+                card.innerHTML = `
+                    <div class="card property-card h-100 border-0 shadow-sm overflow-hidden">
+                        <img src="${prop.image}" class="card-img-top" style="height:240px;object-fit:cover" alt="${prop.title}">
+                        <div class="card-body d-flex flex-column">
+                            <span class="badge bg-${prop.type === 'Agricultural' ? 'success' : prop.type === 'Commercial' ? 'warning' : 'primary'} w-fit mb-2">${prop.type}</span>
+                            <h5 class="card-title">${prop.title}</h5>
+                            <div class="d-flex justify-content-between align-items-center mt-auto">
+                                <div>
+                                    <span class="text-muted small">₹</span>
+                                    <span class="h5 fw-bold">${(prop.price/100000).toFixed(0)}</span>
+                                    <span class="text-muted small">L</span>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted">${prop.size}</small>
+                                </div>
+                            </div>
+                            <button onclick="showPropertyModal(${prop.id}); event.stopImmediatePropagation()" 
+                                    class="btn btn-outline-primary btn-sm mt-3">
+                                View Details
+                            </button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            document.getElementById('resultCount').textContent = `${filteredProps.length} properties found`;
+        }
+
+        // Filter function
+        function filterProperties() {
+            const type = document.getElementById('typeSelect').value;
+            const priceVal = parseInt(document.getElementById('priceRange').value);
+            const size = document.getElementById('sizeSelect').value;
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+
+            const filtered = properties.filter(prop => {
+                const matchesType = !type || prop.type.toLowerCase() === type.toLowerCase();
+                const matchesSize = !size || 
+                    (size === 'Small' && parseFloat(prop.size) < 1000) ||
+                    (size === 'Medium' && parseFloat(prop.size) < 5000) ||
+                    (size === 'Large' && parseFloat(prop.size) >= 5000);
+                const matchesPrice = prop.price >= priceVal;
+                const matchesQuery = !query || 
+                    prop.title.toLowerCase().includes(query) ||
+                    prop.location.toLowerCase().includes(query);
+                return matchesType && matchesSize && matchesPrice && matchesQuery;
+            });
+
+            renderProperties(filtered);
+        }
+
+        // Update price range display
+        function updatePriceRange(slider) {
+            document.getElementById('priceValue').textContent = `₹${(parseInt(slider.value)/100000).toFixed(0)} Crore`;
+        }
+
+        // Category filter
+        function filterByCategory(cat) {
+            document.getElementById('typeSelect').value = cat;
+            filterProperties();
+            document.getElementById('explore').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Show property modal
+        let currentProperty = null;
+        function showPropertyModal(id) {
+            currentProperty = properties.find(p => p.id === id);
+            if (!currentProperty) return;
+            
+            const modal = new bootstrap.Modal(document.getElementById('propertyModal'));
+            document.getElementById('modalTitle').textContent = currentProperty.title;
+            
+            document.getElementById('modalContent').innerHTML = `
+                <div class="col-md-7">
+                    <img src="${currentProperty.image}" class="img-fluid rounded-3" alt="${currentProperty.title}">
+                </div>
+                <div class="col-md-5">
+                    <div class="mb-3">
+                        <span class="badge bg-${currentProperty.type === 'Agricultural' ? 'success' : 'primary'}">${currentProperty.type}</span>
+                    </div>
+                    <h4 class="mb-1">₹${(currentProperty.price/100000).toFixed(0)} Lakh</h4>
+                    <p class="text-muted">${currentProperty.size} • ${currentProperty.location}</p>
+                    
+                    <p class="text-muted">${currentProperty.description}</p>
+                    
+                    <div class="d-grid gap-2">
+                        <button onclick="contactOwner()" class="btn btn-primary">Contact Seller</button>
+                        <button onclick="saveProperty()" class="btn btn-outline-secondary">Save for later</button>
+                    </div>
+                </div>
+            `;
+            modal.show();
+        }
+
+        // Save property (demo)
+        function saveProperty() {
+            alert('✅ Property saved in your wishlist (demo mode)');
+            bootstrap.Modal.getInstance(document.getElementById('propertyModal')).hide();
+        }
+
+        // Contact owner
+        function contactOwner() {
+            if (!currentProperty) return;
+            const chatModal = new bootstrap.Modal(document.getElementById('chatModal'));
+            document.getElementById('modalTitle').textContent = `Chat with ${currentProperty.title}`;
+            document.getElementById('chatMessages').innerHTML = `
+                <div class="bg-light p-3 rounded-3">
+                    <small class="text-muted">Demo chat • Owner is online</small>
+                </div>
+                <div class="text-end">
+                    <div class="bg-primary text-white p-3 rounded-3 d-inline-block">Hi, interested in the plot?</div>
+                </div>
+            `;
+            chatModal.show();
+            document.getElementById('chatInput').focus();
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            if (!input.value.trim()) return;
+            
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'text-end';
+            msgDiv.innerHTML = `<div class="bg-primary text-white p-3 rounded-3 d-inline-block">${input.value}</div>`;
+            document.getElementById('chatMessages').appendChild(msgDiv);
+            input.value = '';
+            
+            // Auto reply after 800ms
+            setTimeout(() => {
+                const reply = document.createElement('div');
+                reply.innerHTML = `<div class="bg-light p-3 rounded-3">Great! I can arrange a site visit tomorrow. Any questions?</div>`;
+                document.getElementById('chatMessages').appendChild(reply);
+                document.getElementById('chatMessages').scrollTop = 999999;
+            }, 800);
+        }
+
+        // Demo login
+        function loginDemo() {
+            alert('✅ Logged in as demo user (demo@example.com)');
+            bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
+        }
+
+        // Show login modal
+        function showLoginModal() {
+            const modal = new bootstrap.Modal(document.getElementById('loginModal'));
+            modal.show();
+        }
+
+        // Initialize everything
+        function init() {
+            renderProperties(properties);
+            
+            // Keyboard shortcut demo
+            document.addEventListener('keydown', function(e) {
+                if (e.metaKey && e.key === 'k') {
+                    e.preventDefault();
+                    document.getElementById('searchInput').focus();
+                }
+            });
+            
+            console.log('%c✅ LandNexus demo website ready! All features working.', 'color:#1e40af; font-weight:bold');
+        }
+
+        // Boot the app
+        window.onload = init;
+    </script>
+</body>
+</html>
